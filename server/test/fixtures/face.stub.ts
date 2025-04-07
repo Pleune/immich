@@ -1,12 +1,9 @@
-import { AssetFaceEntity } from 'src/entities/asset-face.entity';
 import { SourceType } from 'src/enum';
 import { assetStub } from 'test/fixtures/asset.stub';
 import { personStub } from 'test/fixtures/person.stub';
 
-type NonNullableProperty<T> = { [P in keyof T]: NonNullable<T[P]> };
-
 export const faceStub = {
-  face1: Object.freeze<NonNullableProperty<AssetFaceEntity>>({
+  face1: Object.freeze({
     id: 'assetFaceId1',
     assetId: assetStub.image.id,
     asset: assetStub.image,
@@ -22,7 +19,7 @@ export const faceStub = {
     faceSearch: { faceId: 'assetFaceId1', embedding: '[1, 2, 3, 4]' },
     deletedAt: new Date(),
   }),
-  primaryFace1: Object.freeze<AssetFaceEntity>({
+  primaryFace1: Object.freeze({
     id: 'assetFaceId2',
     assetId: assetStub.image.id,
     asset: assetStub.image,
@@ -38,7 +35,7 @@ export const faceStub = {
     faceSearch: { faceId: 'assetFaceId2', embedding: '[1, 2, 3, 4]' },
     deletedAt: null,
   }),
-  mergeFace1: Object.freeze<AssetFaceEntity>({
+  mergeFace1: Object.freeze({
     id: 'assetFaceId3',
     assetId: assetStub.image.id,
     asset: assetStub.image,
@@ -54,7 +51,7 @@ export const faceStub = {
     faceSearch: { faceId: 'assetFaceId3', embedding: '[1, 2, 3, 4]' },
     deletedAt: null,
   }),
-  start: Object.freeze<AssetFaceEntity>({
+  start: Object.freeze({
     id: 'assetFaceId5',
     assetId: assetStub.image.id,
     asset: assetStub.image,
@@ -70,7 +67,7 @@ export const faceStub = {
     faceSearch: { faceId: 'assetFaceId5', embedding: '[1, 2, 3, 4]' },
     deletedAt: null,
   }),
-  middle: Object.freeze<AssetFaceEntity>({
+  middle: Object.freeze({
     id: 'assetFaceId6',
     assetId: assetStub.image.id,
     asset: assetStub.image,
@@ -86,7 +83,7 @@ export const faceStub = {
     faceSearch: { faceId: 'assetFaceId6', embedding: '[1, 2, 3, 4]' },
     deletedAt: null,
   }),
-  end: Object.freeze<AssetFaceEntity>({
+  end: Object.freeze({
     id: 'assetFaceId7',
     assetId: assetStub.image.id,
     asset: assetStub.image,
@@ -102,7 +99,7 @@ export const faceStub = {
     faceSearch: { faceId: 'assetFaceId7', embedding: '[1, 2, 3, 4]' },
     deletedAt: null,
   }),
-  noPerson1: Object.freeze<AssetFaceEntity>({
+  noPerson1: Object.freeze({
     id: 'assetFaceId8',
     assetId: assetStub.image.id,
     asset: assetStub.image,
@@ -118,7 +115,7 @@ export const faceStub = {
     faceSearch: { faceId: 'assetFaceId8', embedding: '[1, 2, 3, 4]' },
     deletedAt: null,
   }),
-  noPerson2: Object.freeze<AssetFaceEntity>({
+  noPerson2: Object.freeze({
     id: 'assetFaceId9',
     assetId: assetStub.image.id,
     asset: assetStub.image,
@@ -134,7 +131,7 @@ export const faceStub = {
     faceSearch: { faceId: 'assetFaceId9', embedding: '[1, 2, 3, 4]' },
     deletedAt: null,
   }),
-  fromExif1: Object.freeze<AssetFaceEntity>({
+  fromExif1: Object.freeze({
     id: 'assetFaceId9',
     assetId: assetStub.image.id,
     asset: assetStub.image,
@@ -149,7 +146,7 @@ export const faceStub = {
     sourceType: SourceType.EXIF,
     deletedAt: null,
   }),
-  fromExif2: Object.freeze<AssetFaceEntity>({
+  fromExif2: Object.freeze({
     id: 'assetFaceId9',
     assetId: assetStub.image.id,
     asset: assetStub.image,
@@ -164,7 +161,7 @@ export const faceStub = {
     sourceType: SourceType.EXIF,
     deletedAt: null,
   }),
-  withBirthDate: Object.freeze<AssetFaceEntity>({
+  withBirthDate: Object.freeze({
     id: 'assetFaceId10',
     assetId: assetStub.image.id,
     asset: assetStub.image,

@@ -1,11 +1,11 @@
+import { User } from 'src/database';
 import { AlbumResponseDto } from 'src/dtos/album.dto';
 import { AssetResponseDto } from 'src/dtos/asset-response.dto';
 import { ExifResponseDto } from 'src/dtos/exif.dto';
 import { SharedLinkResponseDto } from 'src/dtos/shared-link.dto';
 import { mapUser } from 'src/dtos/user.dto';
-import { SharedLinkEntity } from 'src/entities/shared-link.entity';
-import { UserEntity } from 'src/entities/user.entity';
 import { AssetOrder, AssetStatus, AssetType, SharedLinkType } from 'src/enum';
+import { albumStub } from 'test/fixtures/album.stub';
 import { assetStub } from 'test/fixtures/asset.stub';
 import { authStub } from 'test/fixtures/auth.stub';
 import { userStub } from 'test/fixtures/user.stub';
@@ -114,10 +114,12 @@ export const sharedLinkStub = {
     allowUpload: true,
     allowDownload: true,
     showExif: true,
-    album: undefined,
+    albumId: null,
+    album: null,
     description: null,
     assets: [assetStub.image],
-  } as SharedLinkEntity),
+    password: null,
+  }),
   valid: Object.freeze({
     id: '123',
     userId: authStub.admin.user.id,
@@ -129,12 +131,12 @@ export const sharedLinkStub = {
     allowUpload: true,
     allowDownload: true,
     showExif: true,
-    album: undefined,
     albumId: null,
     description: null,
     password: null,
     assets: [],
-  } as SharedLinkEntity),
+    album: albumStub.empty,
+  }),
   expired: Object.freeze({
     id: '123',
     userId: authStub.admin.user.id,
@@ -150,8 +152,9 @@ export const sharedLinkStub = {
     password: null,
     albumId: null,
     assets: [],
-  } as SharedLinkEntity),
-  readonlyNoExif: Object.freeze<SharedLinkEntity>({
+    album: albumStub.empty,
+  }),
+  readonlyNoExif: Object.freeze({
     id: '123',
     userId: authStub.admin.user.id,
     user: userStub.admin,
@@ -168,6 +171,7 @@ export const sharedLinkStub = {
     albumId: 'album-123',
     album: {
       id: 'album-123',
+      updateId: '42',
       ownerId: authStub.admin.user.id,
       owner: userStub.admin,
       albumName: 'Test Album',
@@ -185,7 +189,7 @@ export const sharedLinkStub = {
         {
           id: 'id_1',
           status: AssetStatus.ACTIVE,
-          owner: undefined as unknown as UserEntity,
+          owner: undefined as unknown as User,
           ownerId: 'user_id_1',
           deviceAssetId: 'device_asset_id_1',
           deviceId: 'device_id_1',
@@ -240,17 +244,22 @@ export const sharedLinkStub = {
             colorspace: 'sRGB',
             autoStackId: null,
             rating: 3,
+            updatedAt: today,
+            updateId: '42',
           },
           sharedLinks: [],
           faces: [],
           sidecarPath: null,
           deletedAt: null,
           duplicateId: null,
+          updateId: '42',
+          libraryId: null,
+          stackId: null,
         },
       ],
     },
   }),
-  passwordRequired: Object.freeze<SharedLinkEntity>({
+  passwordRequired: Object.freeze({
     id: '123',
     userId: authStub.admin.user.id,
     user: userStub.admin,
@@ -265,6 +274,7 @@ export const sharedLinkStub = {
     password: 'password',
     assets: [],
     albumId: null,
+    album: null,
   }),
 };
 

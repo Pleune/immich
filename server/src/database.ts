@@ -1,5 +1,8 @@
+import { Selectable } from 'kysely';
+import { Albums, AssetFiles, Exif } from 'src/db';
 import { UserMetadataEntity } from 'src/entities/user-metadata.entity';
-import { AssetStatus, AssetType, Permission, UserStatus } from 'src/enum';
+import { AlbumUserRole, AssetStatus, AssetType, Permission, SharedLinkType, SourceType, UserStatus } from 'src/enum';
+import { TagItem } from 'src/types';
 
 export type AuthUser = {
   id: string;
@@ -8,6 +11,11 @@ export type AuthUser = {
   email: string;
   quotaUsageInBytes: number;
   quotaSizeInBytes: number | null;
+};
+
+export type AlbumUser = {
+  user: User;
+  role: AlbumUserRole;
 };
 
 export type Library = {
@@ -73,8 +81,11 @@ export type Asset = {
   duplicateId: string | null;
   duration: string | null;
   encodedVideoPath: string | null;
+  exifInfo?: Selectable<Exif>;
+  faces?: AssetFace[];
   fileCreatedAt: Date | null;
   fileModifiedAt: Date | null;
+  files?: AssetFile[];
   isArchived: boolean;
   isExternal: boolean;
   isFavorite: boolean;
@@ -85,9 +96,12 @@ export type Asset = {
   localDateTime: Date | null;
   originalFileName: string;
   originalPath: string;
+  owner?: User | null;
   ownerId: string;
   sidecarPath: string | null;
+  stack?: Stack;
   stackId: string | null;
+  tags?: TagItem[];
   thumbhash: Buffer<ArrayBufferLike> | null;
   type: AssetType;
 };
@@ -99,6 +113,44 @@ export type SidecarWriteAsset = {
   tags: Array<{ value: string }>;
 };
 
+export type AssetFile = Omit<Selectable<AssetFiles>, 'updateId' | 'updatedAt' | 'createdAt'>;
+
+export type AssetFace = {
+  id: string;
+  assetId: string;
+  imageHeight: number;
+  imageWidth: number;
+  boundingBoxX1: number;
+  boundingBoxX2: number;
+  boundingBoxY1: number;
+  boundingBoxY2: number;
+  person?: Person | null;
+  sourceType?: SourceType;
+};
+
+export type Person = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  ownerId: string;
+  owner?: User;
+  name: string;
+  birthDate: Date | null;
+  thumbnailPath: string;
+  isHidden: boolean;
+  isFavorite: boolean;
+  color: string | null;
+};
+
+export type Stack = {
+  id: string;
+  primaryAssetId: string;
+  owner?: User;
+  ownerId: string;
+  assets?: Asset[];
+  assetCount?: number;
+};
+
 export type AuthSharedLink = {
   id: string;
   expiresAt: Date | null;
@@ -107,6 +159,22 @@ export type AuthSharedLink = {
   allowUpload: boolean;
   allowDownload: boolean;
   password: string | null;
+};
+
+export type SharedLink = AuthSharedLink & {
+  id: string;
+  assets: Asset[];
+  album?: Album | null;
+  albumId: string | null;
+  description: string | null;
+  key: Buffer;
+  type: SharedLinkType;
+  createdAt: Date;
+};
+
+export type Album = Selectable<Albums> & {
+  owner: User;
+  assets: Asset[];
 };
 
 export type AuthSession = {
@@ -127,6 +195,7 @@ export type Partner = {
 const userColumns = ['id', 'name', 'email', 'profileImagePath', 'profileChangedAt'] as const;
 
 export const columns = {
+  assetFiles: ['asset_files.assetId', 'asset_files.id', 'asset_files.path', 'asset_files.type'],
   authUser: [
     'users.id',
     'users.name',

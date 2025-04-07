@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { FACE_THUMBNAIL_SIZE, JOBS_ASSET_PAGINATION_SIZE } from 'src/constants';
 import { StorageCore } from 'src/cores/storage.core';
+import { Asset, Person } from 'src/database';
 import { Chunked, OnJob } from 'src/decorators';
 import { BulkIdErrorReason, BulkIdResponseDto } from 'src/dtos/asset-ids.response.dto';
 import { AuthDto } from 'src/dtos/auth.dto';
@@ -22,7 +23,6 @@ import {
   PersonUpdateDto,
 } from 'src/dtos/person.dto';
 import { AssetFaceEntity } from 'src/entities/asset-face.entity';
-import { AssetEntity } from 'src/entities/asset.entity';
 import { FaceSearchEntity } from 'src/entities/face-search.entity';
 import { PersonEntity } from 'src/entities/person.entity';
 import {
@@ -243,7 +243,7 @@ export class PersonService extends BaseService {
   }
 
   @Chunked()
-  private async delete(people: PersonEntity[]) {
+  private async delete(people: Person[]) {
     await Promise.all(people.map((person) => this.storageRepository.unlink(person.thumbnailPath)));
     await this.personRepository.delete(people);
     this.logger.debug(`Deleted ${people.length} people`);
@@ -301,7 +301,7 @@ export class PersonService extends BaseService {
 
     const relations = { exifInfo: true, faces: { person: false, withDeleted: true }, files: true };
     const [asset] = await this.assetRepository.getByIds([id], relations);
-    const previewFile = getAssetFile(asset.files, AssetFileType.PREVIEW);
+    const previewFile = getAssetFile(asset.files!, AssetFileType.PREVIEW);
     if (!asset || !previewFile) {
       return JobStatus.FAILED;
     }
@@ -320,6 +320,11 @@ export class PersonService extends BaseService {
     const facesToAdd: (Partial<AssetFaceEntity> & { id: string; assetId: string })[] = [];
     const embeddings: FaceSearchEntity[] = [];
     const mlFaceIds = new Set<string>();
+
+    if (!asset.faces) {
+      return JobStatus.FAILED;
+    }
+
     for (const face of asset.faces) {
       if (face.sourceType === SourceType.MACHINE_LEARNING) {
         mlFaceIds.add(face.id);
@@ -483,7 +488,7 @@ export class PersonService extends BaseService {
       embedding: face.faceSearch.embedding,
       maxDistance: machineLearning.facialRecognition.maxDistance,
       numResults: machineLearning.facialRecognition.minFaces,
-      minBirthDate: face.asset.fileCreatedAt,
+      minBirthDate: face.asset.fileCreatedAt ?? undefined,
     });
 
     // `matches` also includes the face itself
@@ -509,7 +514,7 @@ export class PersonService extends BaseService {
         maxDistance: machineLearning.facialRecognition.maxDistance,
         numResults: 1,
         hasPerson: true,
-        minBirthDate: face.asset.fileCreatedAt,
+        minBirthDate: face.asset.fileCreatedAt ?? undefined,
       });
 
       if (matchWithPerson.length > 0) {
@@ -573,6 +578,10 @@ export class PersonService extends BaseService {
       imageHeight: oldHeight,
     } = face;
 
+    if (!assetId || !x1 || !x2 || !y1 || !y2 || !oldWidth || !oldHeight) {
+      return JobStatus.FAILED;
+    }
+
     const asset = await this.assetRepository.getById(assetId, {
       exifInfo: true,
       files: true,
@@ -582,7 +591,10 @@ export class PersonService extends BaseService {
       return JobStatus.FAILED;
     }
 
-    const { width, height, inputPath } = await this.getInputDimensions(asset, { width: oldWidth, height: oldHeight });
+    const { width, height, inputPath } = await this.getInputDimensions(asset, {
+      width: oldWidth,
+      height: oldHeight,
+    });
 
     const thumbnailPath = StorageCore.getPersonThumbnailPath(person);
     this.storageCore.ensureFolders(thumbnailPath);
@@ -672,12 +684,12 @@ export class PersonService extends BaseService {
     return person;
   }
 
-  private async getInputDimensions(asset: AssetEntity, oldDims: ImageDimensions): Promise<InputDimensions> {
+  private async getInputDimensions(asset: Asset, oldDims: ImageDimensions): Promise<InputDimensions> {
     if (!asset.exifInfo?.exifImageHeight || !asset.exifInfo.exifImageWidth) {
       throw new Error(`Asset ${asset.id} dimensions are unknown`);
     }
 
-    const previewFile = getAssetFile(asset.files, AssetFileType.PREVIEW);
+    const previewFile = getAssetFile(asset.files!, AssetFileType.PREVIEW);
     if (!previewFile) {
       throw new Error(`Asset ${asset.id} has no preview path`);
     }

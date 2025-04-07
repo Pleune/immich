@@ -1,4 +1,4 @@
-import { Expression, sql } from 'kysely';
+import { Expression, RawBuilder, sql } from 'kysely';
 
 export const asUuid = (id: string | Expression<string>) => sql<string>`${id}::uuid`;
 
@@ -17,3 +17,5 @@ export const removeUndefinedKeys = <T extends object>(update: T, template: unkno
 
   return update;
 };
+
+export const notNull = <T>(expr: RawBuilder<T>) => expr.$castTo<Exclude<T, null>>();

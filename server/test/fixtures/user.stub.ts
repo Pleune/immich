@@ -3,7 +3,7 @@ import { UserAvatarColor, UserMetadataKey, UserStatus } from 'src/enum';
 import { authStub } from 'test/fixtures/auth.stub';
 
 export const userStub = {
-  admin: Object.freeze<UserEntity>({
+  admin: Object.freeze({
     ...authStub.admin.user,
     status: UserStatus.ACTIVE,
     profileChangedAt: new Date('2021-01-01'),
@@ -21,8 +21,9 @@ export const userStub = {
     metadata: [],
     quotaSizeInBytes: null,
     quotaUsageInBytes: 0,
+    updateId: '42',
   }),
-  user1: Object.freeze<UserEntity>({
+  user1: Object.freeze({
     ...authStub.user1.user,
     status: UserStatus.ACTIVE,
     profileChangedAt: new Date('2021-01-01'),
@@ -45,6 +46,7 @@ export const userStub = {
     ],
     quotaSizeInBytes: null,
     quotaUsageInBytes: 0,
+    updateId: '42',
   }),
   user2: Object.freeze<UserEntity>({
     ...authStub.user2.user,

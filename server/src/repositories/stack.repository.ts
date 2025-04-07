@@ -43,17 +43,17 @@ export class StackRepository {
   constructor(@InjectKysely() private db: Kysely<DB>) {}
 
   @GenerateSql({ params: [{ ownerId: DummyValue.UUID }] })
-  search(query: StackSearch): Promise<StackEntity[]> {
+  search(query: StackSearch) {
     return this.db
       .selectFrom('asset_stack')
       .selectAll('asset_stack')
       .select(withAssets)
       .where('asset_stack.ownerId', '=', query.ownerId)
       .$if(!!query.primaryAssetId, (eb) => eb.where('asset_stack.primaryAssetId', '=', query.primaryAssetId!))
-      .execute() as unknown as Promise<StackEntity[]>;
+      .execute();
   }
 
-  async create(entity: { ownerId: string; assetIds: string[] }): Promise<StackEntity> {
+  async create(entity: { ownerId: string; assetIds: string[] }) {
     return this.db.transaction().execute(async (tx) => {
       const stacks = await tx
         .selectFrom('asset_stack')
@@ -116,7 +116,7 @@ export class StackRepository {
         .selectAll('asset_stack')
         .select(withAssets)
         .where('id', '=', newRecord.id)
-        .executeTakeFirst() as unknown as Promise<StackEntity>;
+        .executeTakeFirstOrThrow();
     });
   }
 
@@ -129,23 +129,23 @@ export class StackRepository {
     await this.db.deleteFrom('asset_stack').where('id', 'in', ids).execute();
   }
 
-  update(id: string, entity: Updateable<StackEntity>): Promise<StackEntity> {
+  update(id: string, entity: Updateable<StackEntity>) {
     return this.db
       .updateTable('asset_stack')
       .set(entity)
       .where('id', '=', asUuid(id))
       .returningAll('asset_stack')
       .returning((eb) => withAssets(eb, true))
-      .executeTakeFirstOrThrow() as unknown as Promise<StackEntity>;
+      .executeTakeFirstOrThrow();
   }
 
   @GenerateSql({ params: [DummyValue.UUID] })
-  getById(id: string): Promise<StackEntity | undefined> {
+  getById(id: string) {
     return this.db
       .selectFrom('asset_stack')
       .selectAll()
       .select((eb) => withAssets(eb, true))
       .where('id', '=', asUuid(id))
-      .executeTakeFirst() as Promise<StackEntity | undefined>;
+      .executeTakeFirst();
   }
 }

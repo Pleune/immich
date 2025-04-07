@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { JOBS_ASSET_PAGINATION_SIZE } from 'src/constants';
+import { Asset } from 'src/database';
 import { OnJob } from 'src/decorators';
 import { mapAsset } from 'src/dtos/asset-response.dto';
 import { AuthDto } from 'src/dtos/auth.dto';
@@ -68,7 +69,7 @@ export class DuplicateService extends BaseService {
       return JobStatus.SKIPPED;
     }
 
-    const previewFile = getAssetFile(asset.files, AssetFileType.PREVIEW);
+    const previewFile = getAssetFile(asset.files || [], AssetFileType.PREVIEW);
     if (!previewFile) {
       this.logger.warn(`Asset ${id} is missing preview image`);
       return JobStatus.FAILED;
@@ -104,10 +105,7 @@ export class DuplicateService extends BaseService {
     return JobStatus.SUCCESS;
   }
 
-  private async updateDuplicates(
-    asset: { id: string; duplicateId: string | null },
-    duplicateAssets: AssetDuplicateResult[],
-  ): Promise<string[]> {
+  private async updateDuplicates(asset: Asset, duplicateAssets: AssetDuplicateResult[]): Promise<string[]> {
     const duplicateIds = [
       ...new Set(
         duplicateAssets

@@ -2,13 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { ExpressionBuilder, Insertable, Kysely, Selectable, sql } from 'kysely';
 import { jsonObjectFrom } from 'kysely/helpers/postgres';
 import { InjectKysely } from 'nestjs-kysely';
+import { AssetFace, Person as PersonType } from 'src/database';
 import { AssetFaces, DB, FaceSearch, Person } from 'src/db';
 import { ChunkedArray, DummyValue, GenerateSql } from 'src/decorators';
 import { AssetFaceEntity } from 'src/entities/asset-face.entity';
 import { PersonEntity } from 'src/entities/person.entity';
 import { SourceType } from 'src/enum';
 import { removeUndefinedKeys } from 'src/utils/database';
-import { Paginated, PaginationOptions } from 'src/utils/pagination';
+import { PaginationOptions } from 'src/utils/pagination';
 
 export interface PersonSearchOptions {
   minimumFaceCount: number;
@@ -99,7 +100,7 @@ export class PersonRepository {
   }
 
   @GenerateSql({ params: [[{ id: DummyValue.UUID }]] })
-  async delete(entities: PersonEntity[]): Promise<void> {
+  async delete(entities: PersonType[]): Promise<void> {
     if (entities.length === 0) {
       return;
     }
@@ -121,7 +122,7 @@ export class PersonRepository {
     await this.vacuum({ reindexVectors: sourceType === SourceType.MACHINE_LEARNING });
   }
 
-  getAllFaces(options: Partial<AssetFaceEntity> = {}): AsyncIterableIterator<AssetFaceEntity> {
+  getAllFaces(options: Partial<AssetFaceEntity> = {}) {
     return this.db
       .selectFrom('asset_faces')
       .selectAll('asset_faces')
@@ -130,7 +131,7 @@ export class PersonRepository {
       .$if(!!options.sourceType, (qb) => qb.where('asset_faces.sourceType', '=', options.sourceType!))
       .$if(!!options.assetId, (qb) => qb.where('asset_faces.assetId', '=', options.assetId!))
       .where('asset_faces.deletedAt', 'is', null)
-      .stream() as AsyncIterableIterator<AssetFaceEntity>;
+      .stream();
   }
 
   getAll(options: Partial<PersonEntity> = {}): AsyncIterableIterator<PersonEntity> {
@@ -145,12 +146,8 @@ export class PersonRepository {
       .stream() as AsyncIterableIterator<PersonEntity>;
   }
 
-  async getAllForUser(
-    pagination: PaginationOptions,
-    userId: string,
-    options?: PersonSearchOptions,
-  ): Paginated<PersonEntity> {
-    const items = (await this.db
+  async getAllForUser(pagination: PaginationOptions, userId: string, options?: PersonSearchOptions) {
+    const items = await this.db
       .selectFrom('person')
       .selectAll('person')
       .innerJoin('asset_faces', 'asset_faces.personId', 'person.id')
@@ -198,7 +195,7 @@ export class PersonRepository {
       .$if(!options?.withHidden, (qb) => qb.where('person.isHidden', '=', false))
       .offset(pagination.skip ?? 0)
       .limit(pagination.take + 1)
-      .execute()) as PersonEntity[];
+      .execute();
 
     if (items.length > pagination.take) {
       return { items: items.slice(0, -1), hasNextPage: true };
@@ -208,7 +205,7 @@ export class PersonRepository {
   }
 
   @GenerateSql()
-  getAllWithoutFaces(): Promise<PersonEntity[]> {
+  getAllWithoutFaces() {
     return this.db
       .selectFrom('person')
       .selectAll('person')
@@ -216,11 +213,11 @@ export class PersonRepository {
       .where('asset_faces.deletedAt', 'is', null)
       .having((eb) => eb.fn.count('asset_faces.assetId'), '=', 0)
       .groupBy('person.id')
-      .execute() as Promise<PersonEntity[]>;
+      .execute();
   }
 
   @GenerateSql({ params: [DummyValue.UUID] })
-  getFaces(assetId: string): Promise<AssetFaceEntity[]> {
+  getFaces(assetId: string) {
     return this.db
       .selectFrom('asset_faces')
       .selectAll('asset_faces')
@@ -228,11 +225,11 @@ export class PersonRepository {
       .where('asset_faces.assetId', '=', assetId)
       .where('asset_faces.deletedAt', 'is', null)
       .orderBy('asset_faces.boundingBoxX1', 'asc')
-      .execute() as Promise<AssetFaceEntity[]>;
+      .execute();
   }
 
   @GenerateSql({ params: [DummyValue.UUID] })
-  getFaceById(id: string): Promise<AssetFaceEntity> {
+  getFaceById(id: string) {
     // TODO return null instead of find or fail
     return this.db
       .selectFrom('asset_faces')
@@ -240,15 +237,11 @@ export class PersonRepository {
       .select(withPerson)
       .where('asset_faces.id', '=', id)
       .where('asset_faces.deletedAt', 'is', null)
-      .executeTakeFirstOrThrow() as Promise<AssetFaceEntity>;
+      .executeTakeFirstOrThrow();
   }
 
   @GenerateSql({ params: [DummyValue.UUID] })
-  getFaceByIdWithAssets(
-    id: string,
-    relations?: { faceSearch?: boolean },
-    select?: SelectFaceOptions,
-  ): Promise<AssetFaceEntity | undefined> {
+  getFaceByIdWithAssets(id: string, relations?: { faceSearch?: boolean }, select?: SelectFaceOptions) {
     return this.db
       .selectFrom('asset_faces')
       .$if(!!select, (qb) => qb.select(select!))
@@ -258,7 +251,7 @@ export class PersonRepository {
       .$if(!!relations?.faceSearch, (qb) => qb.select(withFaceSearch))
       .where('asset_faces.id', '=', id)
       .where('asset_faces.deletedAt', 'is', null)
-      .executeTakeFirst() as Promise<AssetFaceEntity | undefined>;
+      .executeTakeFirst();
   }
 
   @GenerateSql({ params: [DummyValue.UUID, DummyValue.UUID] })
@@ -272,16 +265,17 @@ export class PersonRepository {
     return Number(result.numChangedRows ?? 0);
   }
 
-  getById(personId: string): Promise<PersonEntity | null> {
-    return (this.db //
+  async getById(personId: string) {
+    return this.db //
       .selectFrom('person')
       .selectAll('person')
       .where('person.id', '=', personId)
-      .executeTakeFirst() ?? null) as Promise<PersonEntity | null>;
+      .executeTakeFirst()
+      .then((person) => person ?? null);
   }
 
   @GenerateSql({ params: [DummyValue.UUID, DummyValue.STRING, { withHidden: true }] })
-  getByName(userId: string, personName: string, { withHidden }: PersonNameSearchOptions): Promise<PersonEntity[]> {
+  getByName(userId: string, personName: string, { withHidden }: PersonNameSearchOptions) {
     return this.db
       .selectFrom('person')
       .selectAll('person')
@@ -296,7 +290,7 @@ export class PersonRepository {
       )
       .limit(1000)
       .$if(!withHidden, (qb) => qb.where('person.isHidden', '=', false))
-      .execute() as Promise<PersonEntity[]>;
+      .execute();
   }
 
   @GenerateSql({ params: [DummyValue.UUID, { withHidden: true }] })
@@ -362,8 +356,8 @@ export class PersonRepository {
     };
   }
 
-  create(person: Insertable<Person>): Promise<PersonEntity> {
-    return this.db.insertInto('person').values(person).returningAll().executeTakeFirst() as Promise<PersonEntity>;
+  create(person: Insertable<Person>) {
+    return this.db.insertInto('person').values(person).returningAll().executeTakeFirstOrThrow();
   }
 
   async createAll(people: Insertable<Person>[]): Promise<string[]> {
@@ -399,13 +393,13 @@ export class PersonRepository {
     await query.selectFrom(sql`(select 1)`.as('dummy')).execute();
   }
 
-  async update(person: Partial<PersonEntity> & { id: string }): Promise<PersonEntity> {
+  async update(person: Partial<PersonEntity> & { id: string }) {
     return this.db
       .updateTable('person')
       .set(person)
       .where('person.id', '=', person.id)
       .returningAll()
-      .executeTakeFirstOrThrow() as Promise<PersonEntity>;
+      .executeTakeFirstOrThrow();
   }
 
   async updateAll(people: Insertable<Person>[]): Promise<void> {
@@ -437,7 +431,7 @@ export class PersonRepository {
 
   @GenerateSql({ params: [[{ assetId: DummyValue.UUID, personId: DummyValue.UUID }]] })
   @ChunkedArray()
-  getFacesByIds(ids: AssetFaceId[]): Promise<AssetFaceEntity[]> {
+  getFacesByIds(ids: AssetFaceId[]) {
     if (ids.length === 0) {
       return Promise.resolve([]);
     }
@@ -457,17 +451,17 @@ export class PersonRepository {
       .where('asset_faces.assetId', 'in', assetIds)
       .where('asset_faces.personId', 'in', personIds)
       .where('asset_faces.deletedAt', 'is', null)
-      .execute() as Promise<AssetFaceEntity[]>;
+      .execute();
   }
 
   @GenerateSql({ params: [DummyValue.UUID] })
-  getRandomFace(personId: string): Promise<AssetFaceEntity | undefined> {
+  getRandomFace(personId: string) {
     return this.db
       .selectFrom('asset_faces')
       .selectAll('asset_faces')
       .where('asset_faces.personId', '=', personId)
       .where('asset_faces.deletedAt', 'is', null)
-      .executeTakeFirst() as Promise<AssetFaceEntity | undefined>;
+      .executeTakeFirst();
   }
 
   @GenerateSql()

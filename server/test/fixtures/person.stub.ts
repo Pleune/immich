@@ -1,8 +1,7 @@
-import { PersonEntity } from 'src/entities/person.entity';
 import { userStub } from 'test/fixtures/user.stub';
 
 export const personStub = {
-  noName: Object.freeze<PersonEntity>({
+  noName: Object.freeze({
     id: 'person-1',
     createdAt: new Date('2021-01-01'),
     updatedAt: new Date('2021-01-01'),
@@ -16,8 +15,10 @@ export const personStub = {
     faceAsset: null,
     isHidden: false,
     isFavorite: false,
+    color: null,
+    updateId: '420',
   }),
-  hidden: Object.freeze<PersonEntity>({
+  hidden: Object.freeze({
     id: 'person-1',
     createdAt: new Date('2021-01-01'),
     updatedAt: new Date('2021-01-01'),
@@ -31,8 +32,10 @@ export const personStub = {
     faceAsset: null,
     isHidden: true,
     isFavorite: false,
+    color: null,
+    updateId: '420',
   }),
-  withName: Object.freeze<PersonEntity>({
+  withName: Object.freeze({
     id: 'person-1',
     createdAt: new Date('2021-01-01'),
     updatedAt: new Date('2021-01-01'),
@@ -46,23 +49,27 @@ export const personStub = {
     faceAsset: null,
     isHidden: false,
     isFavorite: false,
+    color: null,
+    updateId: '420',
   }),
-  withBirthDate: Object.freeze<PersonEntity>({
+  withBirthDate: Object.freeze({
     id: 'person-1',
     createdAt: new Date('2021-01-01'),
     updatedAt: new Date('2021-01-01'),
     ownerId: userStub.admin.id,
     owner: userStub.admin,
     name: 'Person 1',
-    birthDate: '1976-06-30',
+    birthDate: new Date('1976-06-30'),
     thumbnailPath: '/path/to/thumbnail.jpg',
     faces: [],
     faceAssetId: null,
     faceAsset: null,
     isHidden: false,
     isFavorite: false,
+    color: null,
+    updateId: '420',
   }),
-  noThumbnail: Object.freeze<PersonEntity>({
+  noThumbnail: Object.freeze({
     id: 'person-1',
     createdAt: new Date('2021-01-01'),
     updatedAt: new Date('2021-01-01'),
@@ -76,8 +83,10 @@ export const personStub = {
     faceAsset: null,
     isHidden: false,
     isFavorite: false,
+    color: null,
+    updateId: '420',
   }),
-  newThumbnail: Object.freeze<PersonEntity>({
+  newThumbnail: Object.freeze({
     id: 'person-1',
     createdAt: new Date('2021-01-01'),
     updatedAt: new Date('2021-01-01'),
@@ -91,8 +100,10 @@ export const personStub = {
     faceAsset: null,
     isHidden: false,
     isFavorite: false,
+    color: null,
+    updateId: '420',
   }),
-  primaryPerson: Object.freeze<PersonEntity>({
+  primaryPerson: Object.freeze({
     id: 'person-1',
     createdAt: new Date('2021-01-01'),
     updatedAt: new Date('2021-01-01'),
@@ -106,8 +117,10 @@ export const personStub = {
     faceAsset: null,
     isHidden: false,
     isFavorite: false,
+    color: null,
+    updateId: '420',
   }),
-  mergePerson: Object.freeze<PersonEntity>({
+  mergePerson: Object.freeze({
     id: 'person-2',
     createdAt: new Date('2021-01-01'),
     updatedAt: new Date('2021-01-01'),
@@ -121,8 +134,10 @@ export const personStub = {
     faceAsset: null,
     isHidden: false,
     isFavorite: false,
+    color: null,
+    updateId: '420',
   }),
-  randomPerson: Object.freeze<PersonEntity>({
+  randomPerson: Object.freeze({
     id: 'person-3',
     createdAt: new Date('2021-01-01'),
     updatedAt: new Date('2021-01-01'),
@@ -136,8 +151,10 @@ export const personStub = {
     faceAsset: null,
     isHidden: false,
     isFavorite: false,
+    color: null,
+    updateId: '420',
   }),
-  isFavorite: Object.freeze<PersonEntity>({
+  isFavorite: Object.freeze({
     id: 'person-4',
     createdAt: new Date('2021-01-01'),
     updatedAt: new Date('2021-01-01'),
@@ -151,5 +168,7 @@ export const personStub = {
     faceAsset: null,
     isHidden: false,
     isFavorite: true,
+    color: null,
+    updateId: '420',
   }),
 };

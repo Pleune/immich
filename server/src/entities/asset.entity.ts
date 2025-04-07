@@ -1,6 +1,7 @@
-import { DeduplicateJoinsPlugin, ExpressionBuilder, Kysely, SelectQueryBuilder, sql } from 'kysely';
+import { DeduplicateJoinsPlugin, ExpressionBuilder, Kysely, Selectable, SelectQueryBuilder, sql } from 'kysely';
 import { jsonArrayFrom, jsonObjectFrom } from 'kysely/helpers/postgres';
-import { DB } from 'src/db';
+import { Asset, columns } from 'src/database';
+import { DB, Exif } from 'src/db';
 import { AlbumEntity } from 'src/entities/album.entity';
 import { AssetFaceEntity } from 'src/entities/asset-face.entity';
 import { AssetFileEntity } from 'src/entities/asset-files.entity';
@@ -59,14 +60,16 @@ export class AssetEntity {
   duplicateId!: string | null;
 }
 
-export type AssetEntityPlaceholder = AssetEntity & {
+export type AssetEntityPlaceholder = Asset & {
   fileCreatedAt: Date | null;
   fileModifiedAt: Date | null;
   localDateTime: Date | null;
 };
 
 export function withExif<O>(qb: SelectQueryBuilder<DB, 'assets', O>) {
-  return qb.leftJoin('exif', 'assets.id', 'exif.assetId').select((eb) => eb.fn.toJson(eb.table('exif')).as('exifInfo'));
+  return qb
+    .leftJoin('exif', 'assets.id', 'exif.assetId')
+    .select((eb) => eb.fn.toJson(eb.table('exif')).$castTo<Selectable<Exif>>().as('exifInfo'));
 }
 
 export function withExifInner<O>(qb: SelectQueryBuilder<DB, 'assets', O>) {
@@ -85,7 +88,7 @@ export function withFaces(eb: ExpressionBuilder<DB, 'assets'>, withDeletedFace?:
   return jsonArrayFrom(
     eb
       .selectFrom('asset_faces')
-      .selectAll()
+      .selectAll('asset_faces')
       .whereRef('asset_faces.assetId', '=', 'assets.id')
       .$if(!withDeletedFace, (qb) => qb.where('asset_faces.deletedAt', 'is', null)),
   ).as('faces');
@@ -95,7 +98,7 @@ export function withFiles(eb: ExpressionBuilder<DB, 'assets'>, type?: AssetFileT
   return jsonArrayFrom(
     eb
       .selectFrom('asset_files')
-      .selectAll('asset_files')
+      .select(columns.assetFiles)
       .whereRef('asset_files.assetId', '=', 'assets.id')
       .$if(!!type, (qb) => qb.where('asset_files.type', '=', type!)),
   ).as('files');
@@ -159,13 +162,15 @@ export function hasTags<O>(qb: SelectQueryBuilder<DB, 'assets', O>, tagIds: stri
 }
 
 export function withOwner(eb: ExpressionBuilder<DB, 'assets'>) {
-  return jsonObjectFrom(eb.selectFrom('users').selectAll().whereRef('users.id', '=', 'assets.ownerId')).as('owner');
+  return jsonObjectFrom(eb.selectFrom('users').select(columns.user).whereRef('users.id', '=', 'assets.ownerId')).as(
+    'owner',
+  );
 }
 
 export function withLibrary(eb: ExpressionBuilder<DB, 'assets'>) {
-  return jsonObjectFrom(eb.selectFrom('libraries').selectAll().whereRef('libraries.id', '=', 'assets.libraryId')).as(
-    'library',
-  );
+  return jsonObjectFrom(
+    eb.selectFrom('libraries').selectAll('libraries').whereRef('libraries.id', '=', 'assets.libraryId'),
+  ).as('library');
 }
 
 export function withAlbums<O>(qb: SelectQueryBuilder<DB, 'assets', O>, { albumId }: { albumId?: string }) {
@@ -174,7 +179,7 @@ export function withAlbums<O>(qb: SelectQueryBuilder<DB, 'assets', O>, { albumId
       jsonArrayFrom(
         eb
           .selectFrom('albums')
-          .selectAll()
+          .selectAll('albums')
           .innerJoin('albums_assets_assets', (join) =>
             join
               .onRef('albums.id', '=', 'albums_assets_assets.albumsId')
@@ -200,7 +205,7 @@ export function withTags(eb: ExpressionBuilder<DB, 'assets'>) {
   return jsonArrayFrom(
     eb
       .selectFrom('tags')
-      .selectAll('tags')
+      .select(columns.tagDto)
       .innerJoin('tag_asset', 'tags.id', 'tag_asset.tagsId')
       .whereRef('assets.id', '=', 'tag_asset.assetsId'),
   ).as('tags');
