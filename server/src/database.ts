@@ -1,3 +1,5 @@
+import { Selectable } from 'kysely';
+import { Exif as DatabaseExif } from 'src/db';
 import { AssetStatus, AssetType, MemoryType, Permission, UserStatus } from 'src/enum';
 import { OnThisDayData, UserMetadataItem } from 'src/types';
 
@@ -183,6 +185,8 @@ export type Session = {
   deviceOS: string;
   deviceType: string;
 };
+
+export type Exif = Omit<Selectable<DatabaseExif>, 'updatedAt' | 'updateId'>;
 
 const userColumns = ['id', 'name', 'email', 'profileImagePath', 'profileChangedAt'] as const;
 
