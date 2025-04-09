@@ -16,6 +16,7 @@ import {
 import { ActivityRepository } from 'src/repositories/activity.repository';
 import { ApiKeyRepository } from 'src/repositories/api-key.repository';
 import { MemoryRepository } from 'src/repositories/memory.repository';
+import { PersonRepository } from 'src/repositories/person.repository';
 import { SearchRepository } from 'src/repositories/search.repository';
 import { SessionRepository } from 'src/repositories/session.repository';
 
@@ -28,6 +29,7 @@ type IApiKeyRepository = RepositoryInterface<ApiKeyRepository>;
 type IMemoryRepository = RepositoryInterface<MemoryRepository>;
 type ISearchRepository = RepositoryInterface<SearchRepository>;
 type ISessionRepository = RepositoryInterface<SessionRepository>;
+type IPersonRepository = RepositoryInterface<PersonRepository>;
 
 export type ActivityItem =
   | Awaited<ReturnType<IActivityRepository['create']>>
@@ -54,6 +56,10 @@ export type TagItem = {
   color: string | null;
   parentId: string | null;
 };
+
+export type PersonItem = Awaited<ReturnType<IPersonRepository['getAllForUser']>>['items'][0];
+
+export type FaceItem = Awaited<ReturnType<IPersonRepository['getFaces']>>[0];
 
 export interface CropOptions {
   top: number;

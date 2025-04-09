@@ -71,17 +71,16 @@ export type AssetMapOptions = {
   auth?: AuthDto;
 };
 
+// TODO: this is inefficient
 const peopleWithFaces = (faces: AssetFaceEntity[]): PersonWithFacesResponseDto[] => {
   const result: PersonWithFacesResponseDto[] = [];
-  if (faces) {
-    for (const face of faces) {
-      if (face.person) {
-        const existingPersonEntry = result.find((item) => item.id === face.person!.id);
-        if (existingPersonEntry) {
-          existingPersonEntry.faces.push(face);
-        } else {
-          result.push({ ...mapPerson(face.person!), faces: [mapFacesWithoutPerson(face)] });
-        }
+  for (const face of faces) {
+    if (face.person) {
+      const existingPersonEntry = result.find((item) => item.id === face.person!.id);
+      if (existingPersonEntry) {
+        existingPersonEntry.faces.push(face);
+      } else {
+        result.push({ ...mapPerson(face.person!), faces: [mapFacesWithoutPerson(face)] });
       }
     }
   }

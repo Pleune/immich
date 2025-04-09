@@ -85,7 +85,7 @@ export class StorageCore {
     return join(APP_MEDIA_LOCATION, folder);
   }
 
-  static getPersonThumbnailPath(person: PersonEntity) {
+  static getPersonThumbnailPath(person: { id: string; ownerId: string }) {
     return StorageCore.getNestedPath(StorageFolder.THUMBNAILS, person.ownerId, `${person.id}.jpeg`);
   }
 
@@ -135,7 +135,7 @@ export class StorageCore {
     });
   }
 
-  async movePersonFile(person: PersonEntity, pathType: PersonPathType) {
+  async movePersonFile(person: { id: string; ownerId: string; thumbnailPath: string }, pathType: PersonPathType) {
     const { id: entityId, thumbnailPath } = person;
     switch (pathType) {
       case PersonPathType.FACE: {
